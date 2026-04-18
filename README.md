@@ -19,14 +19,28 @@
 
 该技能依赖 `Python 3` 和 `FFmpeg` 系统组件。
 
-### 1. 系统依赖安装 (以 Ubuntu/Debian 为例)
+### 1. 系统依赖安装 (FFmpeg)
 
+由于 ClawHub 不允许直接上传二进制文件，建议通过以下方式在运行环境中安装 FFmpeg。
+
+#### **Linux (Ubuntu/Debian)**
 ```bash
-# 安装 FFmpeg (视频处理核心)
-apt update && apt install -y ffmpeg
+sudo apt update && sudo apt install -y ffmpeg
+```
 
-# 验证安装
-ffmpeg -version
+#### **macOS (Homebrew)**
+```bash
+brew install ffmpeg
+```
+
+#### **Windows**
+1. 访问 [FFmpeg 官网](https://ffmpeg.org/download.html) 下载构建好的二进制压缩包。
+2. 解压并将其 `bin` 目录添加到系统的 `PATH` 环境变量中。
+
+#### **通过 Python 自动安装 (推荐)**
+如果你无法在系统层面安装 FFmpeg，可以在 `requirements.txt` 中添加 `static-ffmpeg`，并在代码中自动配置：
+```bash
+pip install static-ffmpeg
 ```
 
 ### 2. Python 依赖安装

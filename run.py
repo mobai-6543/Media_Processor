@@ -6,6 +6,13 @@ import urllib.request
 import tempfile
 from PIL import Image, ImageDraw, ImageFont
 
+# 尝试加载 static-ffmpeg 自动配置环境
+try:
+    import static_ffmpeg
+    static_ffmpeg.add_paths()
+except ImportError:
+    pass
+
 def is_url(path):
     return path.startswith(('http://', 'https://'))
 
@@ -55,26 +62,38 @@ def add_image_watermark(input_path, output_path, text="OpenClaw"):
 
 def process_video(input_path, output_path, action="compress"):
     """
-    使用 ffmpeg 处理视频 (ffmpeg 原生支持 URL)
+    使用 ffmpeg-python 处理视频 (ffmpeg 原生支持 URL)
     """
-    if action == "compress":
-        # 简单的 ffmpeg 压缩指令 (使用 H.264 编码，CRF 28)
-        cmd = f"ffmpeg -i \"{input_path}\" -vcodec libx264 -crf 28 -preset fast -y \"{output_path}\""
-    elif action == "watermark":
-        # 简单的 ffmpeg 文字水印
-        cmd = f"ffmpeg -i \"{input_path}\" -vf \"drawtext=text='OpenClaw':x=w-tw-10:y=h-th-10:fontsize=24:fontcolor=white@0.5\" -y \"{output_path}\""
-    elif action == "convert":
-        # 默认 H.265 转 H.264
-        cmd = f"ffmpeg -i \"{input_path}\" -vcodec libx264 -acodec copy -y \"{output_path}\""
-    else:
-        print(f"错误: 未知视频动作 {action}")
+    try:
+        import ffmpeg
+    except ImportError:
+        print("错误: 请先安装 ffmpeg-python: pip install ffmpeg-python")
         return
 
     try:
-        subprocess.run(cmd, shell=True, check=True, capture_output=True)
+        stream = ffmpeg.input(input_path)
+        
+        if action == "compress":
+            # 简单的 ffmpeg 压缩：使用 H.264 编码，CRF 28
+            stream = stream.output(output_path, vcodec='libx264', crf=28, preset='fast')
+        elif action == "watermark":
+            # 简单的 ffmpeg 文字水印
+            stream = stream.drawtext(text='OpenClaw', x='w-tw-10', y='h-th-10', fontsize=24, fontcolor='white@0.5')
+            stream = stream.output(output_path)
+        elif action == "convert":
+            # 默认 H.265 转 H.264
+            stream = stream.output(output_path, vcodec='libx264', acodec='copy')
+        else:
+            print(f"错误: 未知视频动作 {action}")
+            return
+
+        print(f"正在执行 FFmpeg 处理: {action}...")
+        stream.overwrite_output().run(capture_stdout=True, capture_stderr=True)
         print(f"成功: 视频 {action} 完成 -> {output_path}")
-    except subprocess.CalledProcessError as e:
-        print(f"错误: ffmpeg 执行失败: {e.stderr.decode()}")
+    except ffmpeg.Error as e:
+        print(f"错误: ffmpeg 执行失败: {e.stderr.decode() if e.stderr else str(e)}")
+    except Exception as e:
+        print(f"错误: 处理过程出现异常: {str(e)}")
 
 def main():
     parser = argparse.ArgumentParser(description='OpenClaw 媒体处理专家')
