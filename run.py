@@ -1,7 +1,6 @@
 import argparse
 import sys
 import os
-import subprocess
 import urllib.request
 import tempfile
 from PIL import Image, ImageDraw, ImageFont
@@ -24,7 +23,7 @@ def download_file(url, suffix):
         
         # 使用 Request 对象添加 User-Agent 避免 403
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'})
-        with urllib.request.urlopen(req) as response, open(temp_path, 'wb') as out_file:
+        with urllib.request.urlopen(req, timeout=30) as response, open(temp_path, 'wb') as out_file:
             out_file.write(response.read())
             
         return temp_path
