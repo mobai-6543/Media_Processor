@@ -128,18 +128,42 @@ def main():
                 temp_files.append(input_path)
 
     if not args.output:
-        # 默认输出路径：文件名加前缀
+        # 确定基础目录
         if is_url(args.input):
-            dir_name = "./data/media" # 确保是绝对路径
-            if not os.path.exists(dir_name):
-                os.makedirs(dir_name, exist_ok=True)
-            base_name = "url_processed_media"
-            ext = ".jpg" if args.type == 'image' else ".mp4"
-            args.output = os.path.join(dir_name, f"{base_name}_{os.getpid()}{ext}")
+            base_dir = os.path.abspath("./data")
         else:
-            dir_name = os.path.dirname(args.input)
-            base_name = os.path.basename(args.input)
-            args.output = os.path.join(dir_name, f"processed_{base_name}")
+            base_dir = os.path.dirname(os.path.abspath(args.input))
+        
+        # 根据类型确定子目录
+        sub_dir = "media/images" if args.type == 'image' else "media/video"
+        target_dir = os.path.join(base_dir, sub_dir)
+        
+        if not os.path.exists(target_dir):
+            os.makedirs(target_dir, exist_ok=True)
+
+        if is_url(args.input):
+            base_name = "url_processed"
+            # 根据类型和动作选择扩展名
+            if args.type == 'image':
+                ext = ".jpg" if args.action != 'watermark' else ".png"
+            else:
+                ext = ".mp4"
+            args.output = os.path.join(target_dir, f"{base_name}_{os.getpid()}{ext}")
+        else:
+            abs_input = os.path.abspath(args.input)
+            root, old_ext = os.path.splitext(os.path.basename(abs_input))
+            
+            # 根据动作决定扩展名
+            if args.type == 'image' and args.action in ['compress', 'convert']:
+                new_ext = ".jpg"
+            else:
+                new_ext = old_ext
+                
+            args.output = os.path.join(target_dir, f"processed_{root}{new_ext}")
+    else:
+        # 如果提供了 output，转为绝对路径并确保父目录存在
+        args.output = os.path.abspath(args.output)
+        os.makedirs(os.path.dirname(args.output), exist_ok=True)
 
     try:
         if args.type == 'image':

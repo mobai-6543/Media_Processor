@@ -22,7 +22,7 @@ metadata:
         required: true
       - name: output
         type: string
-        description: "处理后的保存路径"
+        description: "可选。处理后的保存路径。如果不传，会自动在输入文件所在目录（或 ./data/）下的 media/images 或 media/video 目录生成文件。"
       - name: text
         type: string
         description: "水印文字内容"
